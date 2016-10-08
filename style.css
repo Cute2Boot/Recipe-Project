@@ -1,3 +1,11 @@
 #search-container select {
     width: 400px;
 }
+
+#header {
+    cursor: pointer
+}
+
+li {
+    cursor: pointer;
+}

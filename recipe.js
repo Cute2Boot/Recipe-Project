@@ -11,10 +11,12 @@ $(document).ready(function () {
     };
 
     // Start templates
+    Recipe.Templates.searchLayout = _.template($("#search-layout-template").html());
     Recipe.Templates.search = _.template($('#search-template').html());
     Recipe.Templates.results = _.template($('#results-template').html());
     Recipe.Templates.recipe = _.template($('#recipe-template').html());
-
+    Recipe.Templates.recipeFull = _.template($('#recipe-full-template').html());
+    Recipe.Templates.recipeFullIngredient = _.template($('#recipe-full-ingredient-template').html());
     // Start models
     Recipe.Models.Recipe = Backbone.Model.extend();
     Recipe.Models.Ingredient = Backbone.Model.extend();
@@ -77,6 +79,16 @@ $(document).ready(function () {
     window.recipeCollection = new Recipe.Collections.Recipes([ meatSauce, burgers, toast ]);
 
     // Start views
+
+    Recipe.Views.SearchLayoutView = Backbone.View.extend({
+        template: Recipe.Templates.searchLayout,
+        initialize: function () {
+            this.setViews({
+                '#search-container': new Recipe.Views.SearchView({ collection: ingredientsCollection }),
+                '#results-container': new Recipe.Views.ResultsView({ collection: recipeCollection })
+            });
+        }
+    });
     Recipe.Views.SearchView = Backbone.View.extend({
         template: Recipe.Templates.search,
         events: {
@@ -102,8 +114,20 @@ $(document).ready(function () {
 
     Recipe.Views.RecipeView = Backbone.View.extend({
         template: Recipe.Templates.recipe,
-        tagName: 'li'
+        tagName: 'li',
+        events: {
+            'click': 'click'
+        },
+        click: function () {
+            console.log('clicked');
+            router.navigate("recipe/" + this.model.get('id'), { trigger: true });
+        }
     });
+
+    Recipe.Views.RecipeFullView = Backbone.View.extend({
+        template: Recipe.Templates.recipeFull
+    });
+
 
     Recipe.Views.ResultsView = Backbone.View.extend({
         template: Recipe.Templates.results,
@@ -147,17 +171,40 @@ $(document).ready(function () {
 
     Recipe.Views.Main = Backbone.View.extend({
         template: "#main-template",
-        initialize: function () {
-            this.setViews({
-                '#search-container': new Recipe.Views.SearchView({ collection: ingredientsCollection }),
-                '#results-container': new Recipe.Views.ResultsView({ collection: recipeCollection })
-            });
+        events: {
+            'click #header': 'search'
+        },
+        search: function () {
+            router.navigate("", { trigger: true});
         }
     });
 
+    var Workspace = Backbone.Router.extend({
+        routes: {
+            "recipe/:id": "recipe",
+            "*path": "search"
+        },
+        search: function () {
+            app.setView('#content-container', new Recipe.Views.SearchLayoutView());
+            app.renderViews('#content-container');
+        },
+        recipe: function (id) {
+            console.log('test');
+            var recipe = recipeCollection.get(id);
+            var recipeFullView = new Recipe.Views.RecipeFullView({ model: recipe });
+            app.setView('#content-container', recipeFullView);
+            app.renderViews('#content-container');
+        }
+    });
+
+    var router = new Workspace();
     // Init stuff
     var app = new Recipe.Views.Main();
     app.render();
     var main = $('#main');
     main.append(app.$el);
+
+    Backbone.history.start({pushState: false});
+
+
 });
