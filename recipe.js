@@ -123,7 +123,6 @@ $(document).ready(function () {
             }
         },
         search: function (ingredients) {
-            console.log('ingredients received', ingredients);
             this.removeView('ul');
             if (ingredients.length == 0) {
                 this.collection = this.allRecipes;
@@ -133,13 +132,12 @@ $(document).ready(function () {
             else {
                 var results = [];
                 recipeCollection.each(function (recipe) {
-                    recipe.get('ingredients').each(function (recipeIngredient) {
-                        if (_.contains(ingredients, recipeIngredient)) {
-                            results.push(recipe);
-                        }
-                    });
+                    if (_.every(ingredients, function (ingredient) {
+                        return recipe.get('ingredients').contains(ingredient);
+                    })) {
+                        results.push(recipe);
+                    }
                 });
-                console.log(results);
                 this.collection = new Recipe.Collections.Recipes(results);
                 this.beforeRender();
                 this.renderViews('ul');
